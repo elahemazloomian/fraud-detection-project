@@ -29,7 +29,8 @@ x_train, x_test, y_train, y_test = train_test_split(
     x_fraud, y_fraud, test_size=0.2, random_state=42, stratify=y_fraud
 )
 
-
+reports_dir = os.path.join(BASE_DIR, "reports")
+os.makedirs(reports_dir, exist_ok=True)
 
 print("----------------- Logistic Model ---------------------")
 scaler_logestic = StandardScaler()
@@ -46,6 +47,7 @@ cm_logestic = confusion_matrix(y_test, logestic_prediction_test)
 cm_logestic_display = ConfusionMatrixDisplay(cm_logestic)
 cm_logestic_display.plot()
 plt.title("cm for logestic with 0.5 Threshold ")
+plt.savefig(os.path.join(reports_dir, "logistic_cm.png"), bbox_inches='tight')
 plt.show()
 
 print("---------------- Threshold impact on Logistic -------------------------")
@@ -67,6 +69,7 @@ for i in range(0, 3):
     cm_knn_display = ConfusionMatrixDisplay(cm_knn)
     cm_knn_display.plot()
     plt.title(f"Unscaled KNN with k ={k_neighbors[i]}")
+    plt.savefig(os.path.join(reports_dir, f"Unscaled_knn_cm_k{k_neighbors[i]}.png"), bbox_inches='tight')
     plt.show()
 
 print("")
@@ -85,6 +88,7 @@ for i in range(0, 3):
     cm_knn_display_scaled = ConfusionMatrixDisplay(cm_knn_scaled)
     cm_knn_display_scaled.plot()
     plt.title(f"Scaled KNN with k ={k_neighbors[i]}")
+    plt.savefig(os.path.join(reports_dir, f"Scaled_knn_cm_k{k_neighbors[i]}.png"), bbox_inches='tight')
     plt.show()
 
 print("------------------- KNN Cross validation -------------------")
@@ -118,6 +122,7 @@ for i in range(4):
     cm_decision_display = ConfusionMatrixDisplay(confusion_matrix=cm_decision_prediction)
     cm_decision_display.plot()
     plt.title(f"Decision Tree Model with depth k ={depth[i]}")
+    plt.savefig(os.path.join(reports_dir, f"tree_cm_depth_{depth[i]}.png"), bbox_inches='tight')
     plt.show()
 
 print("-------------------- Tree Cross validation --------------------")
