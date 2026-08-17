@@ -16,7 +16,7 @@ first mini project/
 │   └── scaler.pkl              # Saved StandardScaler object
 ├── reports/
 │   ├── logistic_cm.png         # Logistic regression confusion matrix
-│   ├── knn_cm_k5.png           # KNN evaluation plot
+│   ├── Scaled_knn_cm_k5.png    # KNN evaluation plot
 │   └── tree_cm_depth_5.png     # Decision Tree evaluation plot
 ├── src/
 │   ├── data_prep.py            # Data loading & cleaning pipeline
@@ -27,9 +27,7 @@ first mini project/
 └── README.md
 
 
-
 Models Evaluated
-
 Logistic Regression: Scaled features with probability threshold tuning (0.3, 0.5, 0.7).
 
 K-Nearest Neighbors (KNN): Evaluated both unscaled and scaled inputs across k = [1, 5, 20].
