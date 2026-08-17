@@ -9,6 +9,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, 
     confusion_matrix, ConfusionMatrixDisplay, classification_report
 )
+import joblib
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
@@ -135,3 +136,15 @@ cv_result = cross_validate(
 for metric in evalutaion_metrics:
     mean_score = cv_result[f"test_{metric}"].mean()
     print(f"Mean {metric.capitalize()}: {mean_score:.4f} ")
+
+
+
+
+
+models_dir = os.path.join(BASE_DIR, "models")
+os.makedirs(models_dir, exist_ok=True)
+
+joblib.dump(scaler_logestic, os.path.join(models_dir, "scaler.pkl"))
+joblib.dump(logestic_model, os.path.join(models_dir, "model.pkl"))
+
+print(f"\nModel and Scaler successfully saved to '{models_dir}'!")
