@@ -58,38 +58,58 @@ for th in [0.3, 0.5, 0.7]:
     print(classification_report(y_test, y_pred_th))
 
 print("----------------- Unscaled KNN ---------------------")
-k_neighbors = [1, 5, 20]
-for i in range(0, 3):
-    knn_model = KNeighborsClassifier(n_neighbors=k_neighbors[i])
-    knn_model.fit(x_train, y_train)
-    prediction_knn = knn_model.predict(x_test)
-    print(f"k = {k_neighbors[i]}")
-    print(classification_report(y_test, prediction_knn))
-    cm_knn = confusion_matrix(y_test, prediction_knn)
-    cm_knn_display = ConfusionMatrixDisplay(cm_knn)
+k_neighbors=[1,5,20]
+results=[]
+for i in range(0,3):
+    knn_model=KNeighborsClassifier(n_neighbors=k_neighbors[i])
+    knn_model.fit(x_train,y_train)
+    prediction_knn=knn_model.predict(x_test)
+    print(f"KNN with k = {k_neighbors[i]}")
+    print(classification_report(y_test,prediction_knn))
+    cm_knn=confusion_matrix(y_test,prediction_knn)
+    cm_knn_display=ConfusionMatrixDisplay(cm_knn)
     cm_knn_display.plot()
-    plt.title(f"Unscaled KNN with k ={k_neighbors[i]}")
-    plt.savefig(os.path.join(reports_dir, f"Unscaled_knn_cm_k{k_neighbors[i]}.png"), bbox_inches='tight')
     plt.show()
+
+    results.append({
+        'K Value': k_neighbors[i],
+        'Scaling': 'Without Scaling',
+        'Precision': round(precision_score(y_test, prediction_knn, zero_division=0), 4),
+        'Recall': round(recall_score(y_test,prediction_knn, zero_division=0), 4),
+        'F1-Score': round(f1_score(y_test, prediction_knn, zero_division=0), 4)
+    })
 
 print("")
 print("------------------- Scaled KNN ------------------")
-knn_scaled = StandardScaler()
-x_train_knn_scaled = knn_scaled.fit_transform(x_train)
-x_test_knn_scaled = knn_scaled.transform(x_test)
-k_neighbors = [1, 5, 20]
-for i in range(0, 3):
-    knn_model = KNeighborsClassifier(n_neighbors=k_neighbors[i])
-    knn_model.fit(x_train_knn_scaled, y_train)
-    prediction_knn_scaled = knn_model.predict(x_test_knn_scaled)
+knn_scaled=StandardScaler()
+x_train_knn_scaled=knn_scaled.fit_transform(x_train)
+x_test_knn_scaled=knn_scaled.transform(x_test)
+k_neighbors=[1,5,20]
+for i in range(0,3):
+    knn_model=KNeighborsClassifier(n_neighbors=k_neighbors[i])
+    knn_model.fit(x_train_knn_scaled,y_train)
+    prediction_knn_scaled=knn_model.predict(x_test_knn_scaled)
     print(f"KNN with k = {k_neighbors[i]}")
-    print(classification_report(y_test, prediction_knn_scaled))
-    cm_knn_scaled = confusion_matrix(y_test, prediction_knn_scaled)
-    cm_knn_display_scaled = ConfusionMatrixDisplay(cm_knn_scaled)
+    print(classification_report(y_test,prediction_knn_scaled))
+    cm_knn_scaled=confusion_matrix(y_test,prediction_knn_scaled)
+    cm_knn_display_scaled=ConfusionMatrixDisplay(cm_knn_scaled)
     cm_knn_display_scaled.plot()
-    plt.title(f"Scaled KNN with k ={k_neighbors[i]}")
-    plt.savefig(os.path.join(reports_dir, f"Scaled_knn_cm_k{k_neighbors[i]}.png"), bbox_inches='tight')
     plt.show()
+
+
+    results.append({
+        'K Value': k_neighbors[i],
+        'Scaling': 'With Scaling',
+        'Precision': round(precision_score(y_test, prediction_knn_scaled, zero_division=0), 4),
+        'Recall': round(recall_score(y_test, prediction_knn_scaled, zero_division=0), 4),
+        'F1-Score': round(f1_score(y_test, prediction_knn_scaled, zero_division=0), 4)
+    })
+
+print("")
+print("===================Scaled vs without Scaled KNN====================")
+print("")
+df_results = pd.DataFrame(results)
+print(df_results)
 
 print("------------------- KNN Cross validation -------------------")
 knn_pipeline = make_pipeline(
