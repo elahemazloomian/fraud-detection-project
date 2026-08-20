@@ -12,7 +12,7 @@ from sklearn.metrics import (
 import joblib
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate,GridSearchCV
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,6 +56,34 @@ for th in [0.3, 0.5, 0.7]:
     y_pred_th = (y_probs >= th).astype(int)
     print(f"--- Threshold: {th} ---")
     print(classification_report(y_test, y_pred_th))
+
+
+
+print("")
+print("=================== CV with GridSearch(Logestic) ======================")
+print("")
+
+logestic_pipeline_grid = make_pipeline(
+    StandardScaler(),
+    LogisticRegression(max_iter=1000)
+)
+
+logestic_param_grid = {
+    'logisticregression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+logestic_grid_search = GridSearchCV(
+    estimator=logestic_pipeline_grid,
+    param_grid=logestic_param_grid,
+    scoring='f1',
+    cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
+    n_jobs=-1
+)
+
+logestic_grid_search.fit(x_train, y_train)
+
+print("Best C:", logestic_grid_search.best_params_)
+print("Best CV F1 score:", logestic_grid_search.best_score_)
 
 print("----------------- Unscaled KNN ---------------------")
 k_neighbors=[1,5,20]
@@ -129,6 +157,35 @@ for metric in evalutaion_metrics:
     mean_score = cv_result[f"test_{metric}"].mean()
     print(f"Mean {metric.capitalize()}: {mean_score:.4f} ")
 
+
+
+print("")
+print("=================== CV with GridSearch (KNN)======================")
+print("")
+
+knn_pipeline=make_pipeline(
+    StandardScaler(),
+    KNeighborsClassifier()
+)
+knn_param_grid = {"kneighborsclassifier__n_neighbors": [1, 3, 5, 7, 11, 15,19]}
+cv=StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
+knn_grid=GridSearchCV(
+    knn_pipeline,
+    param_grid=knn_param_grid,
+    scoring="f1",
+    cv=cv,
+    n_jobs=-1
+)
+knn_grid.fit(x_train, y_train)
+
+print("Best k:", knn_grid.best_params_)
+print("Best CV f1 score:", knn_grid.best_score_)
+
+
+best_knn_model = knn_grid.best_estimator_
+knn_grid_prediction = best_knn_model.predict(x_test)
+print(classification_report(y_test, knn_grid_prediction))
+
 print("----------------- Decision Tree Model -------------------------")
 depth = [None, 2, 5, 10]
 for i in range(4):
@@ -144,6 +201,8 @@ for i in range(4):
     plt.title(f"Decision Tree Model with depth k ={depth[i]}")
     plt.savefig(os.path.join(reports_dir, f"tree_cm_depth_{depth[i]}.png"), bbox_inches='tight')
     plt.show()
+
+
 
 print("-------------------- Tree Cross validation --------------------")
 desicion_pipeline = make_pipeline(
@@ -162,6 +221,34 @@ for metric in evalutaion_metrics:
     mean_score = cv_result[f"test_{metric}"].mean()
     print(f"Mean {metric.capitalize()}: {mean_score:.4f} ")
 
+
+print("")
+print("=================== CV with GridSearch (Desicion Tree) ======================")
+print("")
+
+desicion_pipeline=make_pipeline(
+    DecisionTreeClassifier()
+)
+tree_param_grid = {
+    'decisiontreeclassifier__max_depth': [2, 3, 5, 7, 10, None]
+}
+
+cv=StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
+tree_grid_search=GridSearchCV(
+    desicion_pipeline,
+    param_grid=tree_param_grid,
+    scoring="f1",
+    cv=cv,
+    n_jobs=-1
+)
+tree_grid_search.fit(x_train, y_train)
+
+print("Best max_depth:", tree_grid_search.best_params_)
+print("Best CV F1 score:", tree_grid_search.best_score_)
+
+best_tree_model = tree_grid_search.best_estimator_
+tree_grid_prediction = best_tree_model.predict(x_test)
+print(classification_report(y_test, tree_grid_prediction))
 
 
 
