@@ -37,29 +37,22 @@ Decision Tree Classifier: Tested varying max depths [None, 2, 5, 10].
 Stratified K-Fold Cross Validation: Evaluated pipeline performance using 5-fold CV on Accuracy, Recall, Precision, and F1-score.
 
 
-## Mandatory Experiment 1 & 2: Feature Scaling and Hyperparameter ($K$) Analysis on KNN
+Engineering Analysis & Key Findings
 
-### Quantitative Results
+Catastrophic Impact of Unscaled Features:
 
-| K Value | Scaling Status | Precision | Recall | F1-Score |
-| :---: | :---: | :---: | :---: | :---: |
-| **1** | Without Scaling | 0.4242 | 0.1474 | 0.2188 |
-| **5** | Without Scaling | 1.0000 | 0.0211 | 0.0412 |
-| **20** | Without Scaling | 0.0000 | 0.0000 | 0.0000 |
-| **1** | With Scaling | 0.8293 | 0.7158 | 0.7684 |
-| **5** | With Scaling | 0.9559 | 0.6842 | 0.7975 |
-| **20** | With Scaling | 0.9155 | 0.6842 | 0.7831 |
 
-### Engineering Analysis & Key Findings
+When features are not scaled, high-magnitude variables (Amount and Time) dominate the Euclidean distance calculations. Consequently, as K increases from 1 to 20 without scaling, Recall drops drastically from 14.74% down to 0.00%. At K=20, the model fails to detect a single fraudulent transaction because minority class instances are completely overwhelmed by nearest neighbors from the majority class.
 
-1. **Catastrophic Impact of Unscaled Features:**
-   When features are not scaled, high-magnitude variables (`Amount` and `Time`) dominate the distance metrics (Euclidean distance). Consequently, as $K$ increases from $1$ to $20$ without scaling, the Recall drops drastically from $14.7\%$ down to $0.0\%$. At $K=20$, the model fails to detect a single fraudulent transaction because minority class instances are completely overwhelmed by nearest neighbors from the majority class.
+Performance Recovery via Feature Scaling:
+Applying StandardScaler standardizes all features to zero mean and unit variance. This leads to a massive improvement across all metrics:
 
-2. **Performance Recovery via Feature Scaling:**
-   Applying `StandardScaler` standardizes all features to zero mean and unit variance. This leads to a massive improvement across all metrics:
-   * **F1-Score Boost:** F1-score increases from $0.0412$ to $0.7975$ at $K=5$.
-   * **Recall Improvements:** Recall jumps from $2.11\%$ to $68.42\%$ for $K=5$.
+F1-Score Boost: F1-score increases from 0.0412 to 0.7975 at K=5.
 
-3. **Hyperparameter ($K$) Selection:**
-   * **$K=1$:** Yields the highest Recall ($71.58\%$) with scaling, but suffers from lower Precision ($82.93\%$) due to sensitivity to individual noisy data points.
-   * **$K=5$:** Provides the optimal balance, achieving the highest F1-Score ($0.7975$) and exceptional Precision ($95.59\%$).
+Recall Improvements: Recall jumps from 2.11% to 68.42% for K=5.
+
+Hyperparameter (K) Selection:
+
+K=1: Yields the highest Recall (71.58%) with scaling, but suffers from lower Precision (82.93%) due to sensitivity to individual noisy data points.
+
+K=5: Provides the optimal balance, achieving the highest F1-Score (0.7975) and exceptional Precision (95.59%).
