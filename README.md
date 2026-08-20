@@ -56,3 +56,31 @@ Hyperparameter (K) Selection:
 K=1: Yields the highest Recall (71.58%) with scaling, but suffers from lower Precision (82.93%) due to sensitivity to individual noisy data points.
 
 K=5: Provides the optimal balance, achieving the highest F1-Score (0.7975) and exceptional Precision (95.59%).
+
+
+    Why Cross-Validation (not the single train/test split) Decided the Best Model
+
+Two separate experiments were run during this project, and they serve different purposes:
+
+1. Hyperparameter exploration (single train/test split): KNN was tested with 
+   k = 1, 5, 20, and Decision Tree was tested with max_depth = None, 2, 5, 10. 
+   These experiments were used to understand each model's behavior — whether 
+   it overfits or underfits as the hyperparameter changes — not to pick a final 
+   model. A single split can be misleading on its own, since the result depends 
+   partly on which rows happened to land in the test set.
+
+2. Model comparison (5-Fold Stratified Cross-Validation): To choose between 
+   Logistic Regression, KNN, and Decision Tree, 5-fold CV was used because it 
+   averages performance across 5 different train/test splits, giving a much 
+   more reliable estimate than a single split.
+
+Based on CV results (Accuracy, Recall, Precision, F1 below), KNN (with scaling)
+was selected as the best-performing model, achieving the highest F1-score (0.83) 
+and the best balance of Recall (0.76) and Precision (0.92) among the three models.
+
+==========Known limitation: The cross-validation comparison used default hyperparameters 
+for each model (KNN with k=5, Decision Tree with no max_depth limit), not the 
+specific values explored in the hyperparameter experiment above. A more rigorous 
+approach would tune each model's hyperparameters *inside* the cross-validation 
+(e.g. using GridSearchCV) before comparing model types. This was outside the 
+scope of this mini-project but is a natural next step for improving model selection.
