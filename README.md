@@ -84,3 +84,28 @@ specific values explored in the hyperparameter experiment above. A more rigorous
 approach would tune each model's hyperparameters *inside* the cross-validation 
 (e.g. using GridSearchCV) before comparing model types. This was outside the 
 scope of this mini-project but is a natural next step for improving model selection.
+
+
+    Improvement: Hyperparameter Tuning with GridSearchCV
+
+As noted above, the initial cross-validation comparison used default 
+hyperparameters for each model, which is not a fully fair comparison. To 
+address this, GridSearchCV was used to tune each model's key hyperparameter 
+using 5-fold stratified cross-validation, optimizing for F1-score (not 
+accuracy, since the dataset is heavily imbalanced).
+
+Grids searched:
+- KNN: n_neighbors ∈ {1, 3, 5, 7, 11, 15, 19}
+- Decision Tree: max_depth ∈ {2, 3, 5, 7, 10, None}
+- Logistic Regression: C ∈ {0.01, 0.1, 1, 10, 100}
+
+For each model, GridSearchCV performed cross-validation across the full grid, 
+and returned the hyperparameter value with the highest average F1-score. The 
+best model from each family was then evaluated on the held-out test set.
+
+ Best k for KNN = 3, Best max_depth = 5, 
+Best C = 1, and the resulting F1 scores
+
+This approach gives a fairer, more rigorous comparison than the earlier default-
+hyperparameter comparison, since each model type is now evaluated at its own 
+optimal setting rather than sklearn's defaults.
