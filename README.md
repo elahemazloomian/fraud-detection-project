@@ -1,13 +1,55 @@
-# Credit Card Fraud Detection Pipeline
+# Credit Card Fraud Detection
 
-A machine learning pipeline designed to detect fraudulent credit card transactions using scaled feature representations, cross-validation, and model persistence.
+A machine learning project that detects fraudulent credit card transactions using classification models trained on a highly imbalanced dataset.
 
----
+## Overview
+
+This project trains and compares three classification models — Logistic Regression, K-Nearest Neighbors, and Decision Tree — to detect fraudulent transactions. The dataset contains transactions made by European cardholders, where only ~0.17% of transactions are fraudulent, making this a heavily imbalanced classification problem.
+
+Because of the imbalance, **Accuracy is not a useful metric here** — a model predicting "legitimate" for everything would still score above 99%. This project instead prioritizes **Recall, Precision, and F1-score**, since the real-world cost of missing a fraud case (False Negative) is typically much higher than the cost of a false alarm (False Positive).
+
+## Dataset
+
+- Source: [Credit Card Fraud Detection — Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
+- 284,807 transactions, 31 features (`Time`, `V1`-`V28` PCA-transformed features, `Amount`, `Class`)
+- Target: `Class` — 0 = legitimate, 1 = fraud
+
+The dataset is not included in this repo due to size. Download it from Kaggle and place it at `data/creditcard.csv`.
+
+## Methodology
+
+1. **EDA & Data Quality** — duplicate removal, null checks, class imbalance analysis
+2. **Train/Test Split** — stratified 80/20 split to preserve class ratio
+3. **Model Training** — Logistic Regression, KNN, and Decision Tree, each evaluated with 5-Fold Stratified Cross-Validation
+4. **Hyperparameter Tuning** — `GridSearchCV` per model, optimizing for F1-score:
+   - Logistic Regression: `C` ∈ {0.01, 0.1, 1, 10, 100}
+   - KNN: `n_neighbors` ∈ {1, 3, 5, 7, 11, 15, 19}
+   - Decision Tree: `max_depth` ∈ {2, 3, 5, 7, 10, None}
+5. **Model Comparison & Selection** — comparing tuned models on the held-out test set
+
+## Results
+
+| Model | Best Params | CV F1 | Test Precision | Test Recall | Test F1 |
+|---|---|---:|---:|---:|---:|
+| Logistic Regression | C=1 | 0.710 | 0.86 | 0.61 | 0.71 |
+| **KNN (selected)** | **k=3** | **0.848** | **0.94** | **0.72** | **0.81** |
+| Decision Tree | max_depth=5 | 0.831 | 0.88 | 0.71 | 0.78 |
+
+
+### Final Model: KNN (k=3, scaled)
+
+Selected because it achieved the highest CV F1-score and the highest test-set Precision among all three tuned models, with strong Recall. Logistic Regression was ruled out due to meaningfully lower Recall — missing more actual fraud cases, which is the costlier error type in this business context.
+
+## Why Cross-Validation (not a single train/test split) Decided the Best Model
+
+Two separate experiments were run in this project:
+
+1. **Hyperparameter exploration (single split):** used to observe how each model's behavior changes with different hyperparameter values (e.g. KNN's `k`, Decision Tree's `max_depth`). A single split alone isn't reliable enough to declare a winner, since results can shift depending on which rows land in the test set.
+2. **GridSearchCV with 5-Fold Stratified CV:** used to actually select the final model. Each model family was tuned on its own hyperparameter grid, optimizing F1-score, giving every model a fair shot at its own best setting before comparing across model types.
 
 ## Project Structure
 
-```text
-first mini project/
+fraud detection project/
 │
 ├── data/
 │   └── creditcard.csv          # Raw transaction dataset
@@ -26,39 +68,33 @@ first mini project/
 ├── requirements.txt
 └── README.md
 
-
-Models Evaluated
-Logistic Regression: Scaled features with probability threshold tuning (0.3, 0.5, 0.7).
-
-K-Nearest Neighbors (KNN): Evaluated both unscaled and scaled inputs across k = [1, 5, 20].
-
-Decision Tree Classifier: Tested varying max depths [None, 2, 5, 10].
-
-Stratified K-Fold Cross Validation: Evaluated pipeline performance using 5-fold CV on Accuracy, Recall, Precision, and F1-score.
+![Class Imbalance](reports/class_imbalance.png)
+![Correlation Heatmap](reports/correlation_heatmap.png)
+![Model Comparison](reports/model_comparison.png)
 
 
-Engineering Analysis & Key Findings
+## Possible Improvements
 
-Catastrophic Impact of Unscaled Features:
+- Tune hyperparameters inside cross-validation for all metrics simultaneously (multi-metric GridSearchCV) rather than optimizing F1 alone
+- Deploy `predict.py` behind a lightweight API (e.g. FastAPI) for real-time scoring
+
+
+
+### Catastrophic Impact of Unscaled Features:
 
 
 When features are not scaled, high-magnitude variables (Amount and Time) dominate the Euclidean distance calculations. Consequently, as K increases from 1 to 20 without scaling, Recall drops drastically from 14.74% down to 0.00%. At K=20, the model fails to detect a single fraudulent transaction because minority class instances are completely overwhelmed by nearest neighbors from the majority class.
 
-Performance Recovery via Feature Scaling:
+### Performance Recovery via Feature Scaling:
+
 Applying StandardScaler standardizes all features to zero mean and unit variance. This leads to a massive improvement across all metrics:
 
 F1-Score Boost: F1-score increases from 0.0412 to 0.7975 at K=5.
 
 Recall Improvements: Recall jumps from 2.11% to 68.42% for K=5.
 
-Hyperparameter (K) Selection:
 
-K=1: Yields the highest Recall (71.58%) with scaling, but suffers from lower Precision (82.93%) due to sensitivity to individual noisy data points.
-
-K=5: Provides the optimal balance, achieving the highest F1-Score (0.7975) and exceptional Precision (95.59%).
-
-
-    Why Cross-Validation (not the single train/test split) Decided the Best Model
+## Why Cross-Validation (not the single train/test split) Decided the Best Model
 
 Two separate experiments were run during this project, and they serve different purposes:
 
@@ -74,38 +110,3 @@ Two separate experiments were run during this project, and they serve different 
    averages performance across 5 different train/test splits, giving a much 
    more reliable estimate than a single split.
 
-Based on CV results (Accuracy, Recall, Precision, F1 below), KNN (with scaling)
-was selected as the best-performing model, achieving the highest F1-score (0.83) 
-and the best balance of Recall (0.76) and Precision (0.92) among the three models.
-
-==========Known limitation: The cross-validation comparison used default hyperparameters 
-for each model (KNN with k=5, Decision Tree with no max_depth limit), not the 
-specific values explored in the hyperparameter experiment above. A more rigorous 
-approach would tune each model's hyperparameters *inside* the cross-validation 
-(e.g. using GridSearchCV) before comparing model types. This was outside the 
-scope of this mini-project but is a natural next step for improving model selection.
-
-
-    Improvement: Hyperparameter Tuning with GridSearchCV
-
-As noted above, the initial cross-validation comparison used default 
-hyperparameters for each model, which is not a fully fair comparison. To 
-address this, GridSearchCV was used to tune each model's key hyperparameter 
-using 5-fold stratified cross-validation, optimizing for F1-score (not 
-accuracy, since the dataset is heavily imbalanced).
-
-Grids searched:
-- KNN: n_neighbors ∈ {1, 3, 5, 7, 11, 15, 19}
-- Decision Tree: max_depth ∈ {2, 3, 5, 7, 10, None}
-- Logistic Regression: C ∈ {0.01, 0.1, 1, 10, 100}
-
-For each model, GridSearchCV performed cross-validation across the full grid, 
-and returned the hyperparameter value with the highest average F1-score. The 
-best model from each family was then evaluated on the held-out test set.
-
- Best k for KNN = 3, Best max_depth = 5, 
-Best C = 1, and the resulting F1 scores
-
-This approach gives a fairer, more rigorous comparison than the earlier default-
-hyperparameter comparison, since each model type is now evaluated at its own 
-optimal setting rather than sklearn's defaults.
