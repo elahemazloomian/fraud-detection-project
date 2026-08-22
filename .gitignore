@@ -3,3 +3,5 @@ archive.zip
 *.pdf
 __pycache__/
 *.ipynb_checkpoints/
+creditcard.csv
+src/models/
