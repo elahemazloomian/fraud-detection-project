@@ -71,8 +71,7 @@ logestic_pipeline_grid = make_pipeline(
 logestic_param_grid = {
     'logisticregression__C': [0.01, 0.1, 1, 10, 100]
 }
-
-logestic_grid_search = GridSearchCV(
+logistic_grid_search= GridSearchCV(
     estimator=logestic_pipeline_grid,
     param_grid=logestic_param_grid,
     scoring='f1',
@@ -80,10 +79,17 @@ logestic_grid_search = GridSearchCV(
     n_jobs=-1
 )
 
-logestic_grid_search.fit(x_train, y_train)
+logistic_grid_search.fit(x_train, y_train)
 
-print("Best C:", logestic_grid_search.best_params_)
-print("Best CV F1 score:", logestic_grid_search.best_score_)
+print("Best C:", logistic_grid_search
+.best_params_)
+print("Best CV F1 score:", logistic_grid_search.best_score_)
+
+best_logistic_model = logistic_grid_search.best_estimator_
+logistic_grid_prediction = best_logistic_model.predict(x_test)
+print(classification_report(y_test, logistic_grid_prediction))
+
+
 
 print("----------------- Unscaled KNN ---------------------")
 k_neighbors=[1,5,20]
@@ -251,8 +257,71 @@ tree_grid_prediction = best_tree_model.predict(x_test)
 print(classification_report(y_test, tree_grid_prediction))
 
 
+best_tree_model = tree_grid_search.best_estimator_
+tree_grid_prediction = best_tree_model.predict(x_test)
+print(classification_report(y_test, tree_grid_prediction))
 
 
+print("==========================Model Comparison and Data selection============================")
+
+
+comparison=pd.DataFrame({
+
+    "Model":["LogisticRegression","KNN","Decision Tree"],
+    "Best_params": [
+    logistic_grid_search.best_params_,
+    knn_grid.best_params_,
+    tree_grid_search.best_params_
+
+    ],
+    "Best F1 score": [
+        logistic_grid_search.best_score_,
+        knn_grid.best_score_,
+        tree_grid_search.best_score_
+    ],
+    "Test Precision": [
+        precision_score(y_test, logistic_grid_prediction),
+        precision_score(y_test, knn_grid_prediction),
+        precision_score(y_test, tree_grid_prediction)
+    ],
+    "Test Recall": [
+        recall_score(y_test, logistic_grid_prediction),
+        recall_score(y_test, knn_grid_prediction),
+        recall_score(y_test, tree_grid_prediction)
+    ],
+    "Test F1": [
+        f1_score(y_test, logistic_grid_prediction),
+        f1_score(y_test, knn_grid_prediction),
+        f1_score(y_test, tree_grid_prediction)
+    ],
+})
+print(comparison)
+
+comparison.set_index("Model")[["Test Precision", "Test Recall", "Test F1"]].T.plot(
+    kind="bar", figsize=(8, 5), rot=0
+)
+plt.title("Tuned Model Comparison on Test Set")
+plt.ylabel("Score")
+plt.ylim(0, 1)
+plt.legend(loc="lower right")
+plt.tight_layout()
+plt.show()
+
+
+print("=======================Final Model Selection=====================")
+
+final_model = best_knn_model
+final_prediction = final_model.predict(x_test)
+
+print("=================== Final Model: KNN (k=3, scaled) ===================")
+print(classification_report(y_test, final_prediction))
+
+cm_final = confusion_matrix(y_test, final_prediction)
+ConfusionMatrixDisplay(cm_final, display_labels=["Legit", "Fraud"]).plot()
+plt.title("Final Model — Confusion Matrix")
+plt.show()
+
+print("===================== Model Saving =========================")
 models_dir = os.path.join(BASE_DIR, "models")
 os.makedirs(models_dir, exist_ok=True)
 
