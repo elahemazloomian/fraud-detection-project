@@ -12,7 +12,7 @@ from sklearn.metrics import (
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
-
+import seaborn as sns
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 data_path = os.path.join(BASE_DIR, "data", "creditcard.csv")
@@ -20,6 +20,7 @@ data_path = os.path.join(BASE_DIR, "data", "creditcard.csv")
 fraud_data = pd.read_csv(data_path)
 print(fraud_data)
 print(fraud_data.info())
+print(fraud_data.describe())
 
 print("--------------------- Checking duplicated --------------------")
 print("")
@@ -51,13 +52,37 @@ class_legitmate = (fraud["Class"] == 0).sum()
 print(f"Class legitmate numbers : {class_legitmate}")
 class_fraud = (fraud["Class"] == 1).sum()
 print(f"fraud Class numbers : {class_fraud}")
+x=[class_legitmate,class_fraud]
+y=["legitimate_class","fraud_class"]
+
+plt.bar(y,x)
+plt.yscale('log')
+plt.xlabel("classes")
+plt.ylabel(" number of transactions(log)")
+plt.show()
+
+
+
+print("------------------- Display Feature Corrolation -----------------")
+
+plt.figure(figsize=(12, 9))
+sns.heatmap(fraud.corr(), cmap="coolwarm", center=0, linewidths=0.1)
+plt.title("Feature Correlation Heatmap")
+plt.tight_layout()
+plt.show()
+
+
+
+
 print("")
 print("-------------- prepare dataset and test split-------------------")
 x_fraud = fraud.drop(columns=["Class"])
 y_fraud = fraud["Class"]
+
 x_train, x_test, y_train, y_test = train_test_split(
     x_fraud, y_fraud, test_size=0.2, random_state=42, stratify=y_fraud
 )
+
 print(f"Dataset Split Complete! Train shape: {x_train.shape}, Test shape: {x_test.shape}")
 
 
