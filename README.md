@@ -49,6 +49,9 @@ Two separate experiments were run in this project:
 
 ## Project Structure
 
+```text
+
+
 fraud detection project/
 │
 ├── data/
@@ -67,6 +70,8 @@ fraud detection project/
 ├── .gitignore
 ├── requirements.txt
 └── README.md
+
+```
 
 ![Class Imbalance](reports/class_imbalance.png)
 ![Correlation Heatmap](reports/correlation_heatmap.png)
